@@ -1,0 +1,110 @@
+#primary transcription analysis tool.
+
+from Bio import SeqIO
+import matplotlib
+import matplotlib.pyplot as plt
+import re
+
+
+
+from Bio.SeqUtils import GC
+seq_record = SeqIO.read(open("ecoli.fasta"), "fasta")
+print len(seq_record.seq)/2, "bp je dolzina celotne DNA sekvence "
+print "razmerje G/C je:", GC(seq_record.seq), "%"
+if GC(seq_record.seq) > 50:
+    print "it is possibly of eucaria"
+else:
+    print "possibly it isnt of eucaria"
+
+
+
+mRNA = seq_record.seq.transcribe()
+print"total RNA length is: ", len(mRNA)
+rez1 = mRNA.split("AUG")
+rez2 = str(rez1).split("UGA")
+rez3 = str(rez2).split("UAA")
+print "theoretical transcripts: ", len(rez3)
+print len(seq_record.seq)/(70*3600), "h lasts transcription"
+
+
+
+
+def plotx():
+    plt.figure(1)
+    plt.subplot(2, 1, 1)
+    y = (len(seq_record.seq), len(rez3))
+    x = (0,len(seq_record.seq)/(70*3600))
+    width = 0.5
+    plt.bar(x, y, width, color="r")
+    plt.ylabel( 'no. of units' )
+    plt.xlabel("from bp to transcripts in time")
+    plt.title("ratio genome:transripts")
+    plt.legend("enote")
+    plt.subplot(2, 1, 2)
+    y = (len(seq_record.seq), len(rez3))
+    x = (0, 3)
+    plt.xlabel("cas(h)")
+    plt.ylabel("degradation of units")
+    plt.plot(x, y, color="g")
+    plt.show()
+plotx()
+
+import matplotlib.pyplot as plt
+import numpy as np
+import networkx as nx
+def custom_edge_colors():
+    #create an empty graph
+    G = nx.Graph()
+
+
+
+    H=nx.path_graph(len(rez3))
+    G.add_nodes_from(H),
+
+
+
+    custom_node_color={}
+    custom_node_color["H"] = "g"
+
+
+
+
+
+    nx.draw_random(G, node_color=custom_node_color.values(), with_labels=False, node_size=5)
+
+
+    C = nx.Graph()
+    C.add_node("genom")
+    custom_node_color={}
+    custom_node_color["genom"] = "g"
+    nx.draw_random(C, node_color=custom_node_color.values(), with_labels=True, node_size=2500)
+
+
+    plt.show()
+
+
+
+custom_edge_colors()
+from Bio.Seq import Seq
+my_Record = SeqIO.read("ecoli.fasta", "fasta")
+print my_Record.seq
+my_seq = my_Record.seq
+translat = my_seq.transcribe()
+print translat
+from Bio.Blast import NCBIWWW
+from Bio.Blast import NCBIXML
+print "blasting...."
+result_handle=NCBIWWW.qblast("blastn", "nt", str(translat))
+blast_record = NCBIXML.read(result_handle)
+E_VALUE_THRESH = 0.05
+
+for alignment in blast_record.alignments:
+     for hsp in alignment.hsps:
+         if hsp.expect < E_VALUE_THRESH:
+             print('****PORAVNAVA****')
+             print('sequence:', alignment.title)
+             print('length:', alignment.length)
+             print('e value:', hsp.expect)
+             print(hsp.query[0:75] + '...')
+             print(hsp.match[0:75] + '...')
+             print(hsp.sbjct[0:75] + '...')
